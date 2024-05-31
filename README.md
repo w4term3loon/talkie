@@ -88,4 +88,4 @@ You have to start the talkie `./server` that starts listening on the port `6942`
  * LOG: message: Yeah, lets just stop while we can.
  * LOG: updating: 5
  * Waiting for poll...
-'''
+```
