@@ -10,8 +10,8 @@ You have to start the talkie `./server` that starts listening on the port `6942`
 
 ## Pictures
 
-![Anonymus](pictures/anon)
-![Mr Brown](pictures/mrbrown)
+![Anonymus](pictures/anon.png)
+![Mr Brown](pictures/mrbrown.png)
 
 ## Logs
 
