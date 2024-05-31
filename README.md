@@ -15,7 +15,7 @@ You have to start the talkie `./server` that starts listening on the port `6942`
 
 ## Logs
 
-```shell
+```text
 ❯ ./server
  * LOG: selected port: 6942
  * Waiting for poll...
