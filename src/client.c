@@ -10,7 +10,9 @@
 
 #include "ncwrap.h"
 
-volatile unsigned int TERMINATE = 0;
+#define PORT 6942
+
+static int TERMINATE = 0;
 
 struct handler {
   int socket;
@@ -19,16 +21,13 @@ struct handler {
 
 void *
 listener(void *ctx) {
-  char buffer[50];
   struct handler han = *(struct handler *)ctx;
-  while (strcmp(buffer, "exit") != 0) {
-    int recv_rv = recv(han.socket, buffer, sizeof buffer, 0);
-    if (recv_rv >= 0) {
+  for(char buffer[1024];!TERMINATE;) {
+    if (0 < recv(han.socket, buffer, sizeof buffer, MSG_DONTWAIT)) {
       ncw_scroll_window_add_line(han.sw, buffer);
     }
   }
-
-  TERMINATE = 1;
+  printf("broke\n");
   pthread_exit(NULL);
 }
 
@@ -42,13 +41,7 @@ sender(char *buf, size_t buf_sz, void *ctx) {
 int
 main(int argv, char *argc[]) {
 
-  if (argv != 3) {
-    fprintf(stderr, "ERROR: argument error\n");
-    return 0;
-  }
-
-  int PORT = atoi(argc[2]);
-  printf(" * selected address: %s\n", argc[1]);
+  printf(" * starting up localhost\n");
   printf(" * selected port: %d\n", PORT);
 
   struct sockaddr_in server_address;
@@ -56,7 +49,7 @@ main(int argv, char *argc[]) {
   server_address.sin_port = htons(PORT);
 
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-  int convert_rv = inet_pton(AF_INET, argc[1], &server_address.sin_addr);
+  int convert_rv = inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr);
   if (convert_rv < 0) {
     fprintf(stderr, "ERROR: conversion error\n");
     return 1;
@@ -73,9 +66,9 @@ main(int argv, char *argc[]) {
 
   (void)ncw_init();
   input_window_t iw = NULL;
-  ncw_input_window_init(&iw, 10, 17, 50, "input", 0);
+  ncw_input_window_init(&iw, 10, 17, 50, "type here", 0);
   scroll_window_t sw = NULL;
-  ncw_scroll_window_init(&sw, 10, 2, 50, 15, "scroll");
+  ncw_scroll_window_init(&sw, 10, 2, 50, 15, "talkie");
   ctx.sw = sw;
 
   ncw_input_window_set_output(iw, sender, (void*)&ctx);
@@ -85,6 +78,7 @@ main(int argv, char *argc[]) {
   if (pthread_create_rv != 0) {
     perror("type thread failed.");
     close(socket_fd);
+    goto clean;
   }
 
   int event = 0;
@@ -93,19 +87,18 @@ main(int argv, char *argc[]) {
     ncw_update();
     event = ncw_getch();
     switch (event) {
-
     case ERR:
       break;
-
     case CTRL('x'):
+      TERMINATE = 1;
       goto clean;
-
     default:
       ncw_event_handler(event);
     }
   }
 
 clean:
+  pthread_join(listen_thread, NULL);
   ncw_input_window_close(&iw);
   ncw_scroll_window_close(&sw);
 

@@ -12,25 +12,19 @@
 #define TRUE 1
 #define FALSE 0
 #define NCLIENT 10
+#define PORT 6942
 
 int
 main(int argv, char *argc[]) {
-
-  if (argv != 2) {
-    fprintf(stderr, "ERROR: argument error\n");
-    return 1;
-  }
-
   int opt = 1;              //< option setter where memaddr is needed
-  int PORT = atoi(argc[1]); //< the listening port
   uint8_t backlog = 4;      //< the max queue lenght on the socket
-  char buffer[50] = {0};    //< message buffer
+  char buffer[1024] = {0};    //< message buffer
 
   struct sockaddr_in address; //< socket address if listener
   struct pollfd fds[NCLIENT]; //< the fds being polled
 
   int nfds = 1;                  // number of fds being polled
-  int timeout = (1 * 60 * 1000); // after 1 minute no active end
+  int timeout = (5 * 60 * 1000); // after 5 minutes no active end
 
   int f_end_server = FALSE;
   int f_close_connection = FALSE;
