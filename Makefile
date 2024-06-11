@@ -7,10 +7,10 @@ OBJ=$(patsubst %.c, %.o, $(SRC))
 all: server client
 
 server: src/server.c
-	$(CC) $(CFLAGS) -L. $< -o server -lncurses -lncw
+	$(CC) $(CFLAGS) $< -o server
 
 client: src/client.c
-	$(CC) $(CFLAGS) -L. $< -o client -lncurses -lncw
+	$(CC) $(CFLAGS) $< libncw.a -o client -L. -lncurses
 
 clean:
 	rm -f server client
