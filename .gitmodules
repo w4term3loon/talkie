@@ -1,0 +1,3 @@
+[submodule "ncwrap"]
+	path = ncwrap
+	url = git@github.com:w4term3loon/ncwrap.git
