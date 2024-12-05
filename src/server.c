@@ -12,13 +12,18 @@
 #define TRUE 1
 #define FALSE 0
 #define NCLIENT 10
-#define PORT 6942
 
 int
 main(int argv, char *argc[]) {
-  int opt = 1;              //< option setter where memaddr is needed
-  uint8_t backlog = 4;      //< the max queue lenght on the socket
-  char buffer[1024] = {0};    //< message buffer
+  if (argv < 2) {
+    fprintf(stderr, "please provide port\n");
+    return 1;
+  }
+
+  int port = atoi(argc[1]);
+  int opt = 1;             //< option setter where memaddr is needed
+  uint8_t backlog = 4;     //< the max queue lenght on the socket
+  char buffer[1024] = {0}; //< message buffer
 
   struct sockaddr_in address; //< socket address if listener
   struct pollfd fds[NCLIENT]; //< the fds being polled
@@ -33,7 +38,7 @@ main(int argv, char *argc[]) {
   int listen_socket_fd;
   int new_socket_fd;
 
-  printf(" * LOG: selected port: %d\n", PORT);
+  printf(" * LOG: selected port: %d\n", port);
 
   // create socket
   listen_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -56,7 +61,7 @@ main(int argv, char *argc[]) {
   // set address attributes
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons(PORT);
+  address.sin_port = htons(port);
 
   // bind the socket
   int bind_rv = bind(listen_socket_fd, (struct sockaddr *)&address, sizeof(address));

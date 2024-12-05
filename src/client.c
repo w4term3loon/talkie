@@ -10,8 +10,6 @@
 
 #include "ncwrap.h"
 
-#define PORT 6942
-
 static int TERMINATE = 0;
 
 struct handler {
@@ -41,15 +39,22 @@ sender(char *buf, size_t buf_sz, void *ctx) {
 int
 main(int argv, char *argc[]) {
 
-  printf(" * starting up localhost\n");
-  printf(" * selected port: %d\n", PORT);
+  if (argv < 3) {
+    fprintf(stderr, "provide ip and port");
+    return 1;
+  }
+
+  const char *addr = argc[1];
+  const int port = atoi(argc[2]);
+  printf(" * connecting to address: %s\n", addr);
+  printf(" * selected port: %d\n", port);
 
   struct sockaddr_in server_address;
   server_address.sin_family = AF_INET;
-  server_address.sin_port = htons(PORT);
+  server_address.sin_port = htons(port);
 
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-  int convert_rv = inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr);
+  int convert_rv = inet_pton(AF_INET, addr, &server_address.sin_addr);
   if (convert_rv < 0) {
     fprintf(stderr, "ERROR: conversion error\n");
     return 1;
