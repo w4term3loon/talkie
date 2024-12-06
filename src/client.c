@@ -40,7 +40,7 @@ int
 main(int argv, char *argc[]) {
 
   if (argv < 3) {
-    fprintf(stderr, "provide ip and port");
+    fprintf(stderr, "provide ip and port\n");
     return 1;
   }
 

@@ -10,7 +10,7 @@ server: src/server.c
 	$(CC) $(CFLAGS) $< -o server
 
 client: src/client.c ncwrap/libncw.a
-	$(CC) $(CFLAGS) $< ncwrap/libncw.a -o client -L. -lncurses
+	$(CC) $(CFLAGS) $< -Incwrap/inc ncwrap/libncw.a -o client -L. -lncurses
 
 ncwrap/libncw.a:
 	git submodule init && git submodule update && make --directory=ncwrap
