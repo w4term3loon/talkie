@@ -11,6 +11,7 @@
 #include "ncwrap.h"
 
 static int TERMINATE = 0;
+static char name[50];
 
 struct handler {
   int socket;
@@ -20,7 +21,7 @@ struct handler {
 void *
 listener(void *ctx) {
   struct handler han = *(struct handler *)ctx;
-  for(char buffer[1024];!TERMINATE;) {
+  for (char buffer[1024]; !TERMINATE;) {
     if (0 < recv(han.socket, buffer, sizeof buffer, MSG_DONTWAIT)) {
       ncw_scroll_window_add_line(han.sw, buffer);
     }
@@ -32,8 +33,39 @@ listener(void *ctx) {
 void
 sender(char *buf, size_t buf_sz, void *ctx) {
   struct handler han = *(struct handler *)ctx;
-  send(han.socket, buf, buf_sz, 0);
-  ncw_scroll_window_add_line(han.sw, buf);
+
+  // send message
+  if (!strncmp(name, "", sizeof(name))) {
+    send(han.socket, buf, buf_sz, 0);
+  } else {
+    const char delim[] = ": ";
+    char send_buf[sizeof name + sizeof delim + buf_sz];
+    strlcpy(send_buf, name, sizeof send_buf);
+    strlcat(send_buf, delim, sizeof send_buf);
+    strlcat(send_buf, buf, sizeof send_buf);
+    send(han.socket, send_buf, sizeof send_buf, 0);
+  }
+
+  // display own message
+  const char you[] = "You: ";
+  char display[sizeof you + buf_sz];
+  strlcpy(display, you, sizeof display);
+  strlcat(display, buf, sizeof display);
+  ncw_scroll_window_add_line(han.sw, display);
+}
+
+void
+set_name(char *buf, size_t buf_sz, void *ctx) {
+  struct handler han = *(struct handler *)ctx;
+  strlcpy(name, buf, sizeof name);
+
+  // create log
+  const char log[] = "your name was set \'";
+  char buffer[sizeof log + sizeof name + 1];
+  strlcpy(buffer, log, sizeof buffer);
+  strlcat(buffer, name, sizeof buffer);
+  strlcat(buffer, "\'", sizeof buffer);
+  ncw_scroll_window_add_line(han.sw, buffer);
 }
 
 int
@@ -76,10 +108,10 @@ main(int argv, char *argc[]) {
   ncw_scroll_window_init(&sw, 10, 2, 50, 15, "talkie");
   ctx.sw = sw;
 
-  ncw_input_window_set_output(iw, sender, (void*)&ctx);
+  ncw_input_window_set_output(iw, sender, (void *)&ctx);
 
   pthread_t listen_thread;
-  int pthread_create_rv = pthread_create(&listen_thread, NULL, listener, (void*)&ctx);
+  int pthread_create_rv = pthread_create(&listen_thread, NULL, listener, (void *)&ctx);
   if (pthread_create_rv != 0) {
     perror("type thread failed.");
     close(socket_fd);
@@ -87,12 +119,17 @@ main(int argv, char *argc[]) {
   }
 
   int event = 0;
+  input_window_t namer = NULL;
   ncw_focus_step();
   for (;;) {
     ncw_update();
     event = ncw_getch();
     switch (event) {
     case ERR:
+      break;
+    case CTRL('n'):
+      ncw_input_window_init(&namer, 10, 17, 50, "name", 1);         //< make window popup
+      ncw_input_window_set_output(namer, set_name, (void *)&ctx); //< set output
       break;
     case CTRL('x'):
       TERMINATE = 1;
@@ -109,6 +146,8 @@ clean:
 
   ncw_close();
   close(socket_fd);
+
+  printf("name was: %s\n", name);
 
   return 0;
 }
